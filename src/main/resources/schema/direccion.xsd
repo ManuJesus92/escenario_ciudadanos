@@ -1,0 +1,25 @@
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cvaintegra.com/direccion" xmlns:tns="http://cvaintegra.com/direccion">
+<xs:element name="getDireccionRequest">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="id" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+<xs:element name="getDireccionResponse">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="direccion" type="tns:direccion"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+<xs:complexType name="direccion">
+<xs:sequence>
+<xs:element name="calle" type="xs:string"/>
+<xs:element name="entreCalle1" type="xs:string"/>
+<xs:element name="entreCalle2" type="xs:string"/>
+<xs:element name="numero" type="xs:string"/>
+<xs:element name="apto" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

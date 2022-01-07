@@ -1,0 +1,34 @@
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cvaintegra.com/ciudadano" xmlns:tns="http://cvaintegra.com/ciudadano">
+<xs:element name="getCiudadanoRequest">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="id" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+<xs:element name="getCiudadanoResponse">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="ciudadano" type="tns:Ciudadano"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+<xs:complexType name="Ciudadano">
+<xs:sequence>
+<xs:element name="nombre" type="xs:string"/>
+<xs:element name="apellidos" type="xs:string"/>
+<xs:element name="pais" type="tns:pais"/>
+<xs:element name="provincia" type="xs:string"/>
+<xs:element name="municipio" type="xs:string"/>
+<xs:element name="direccion" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+<xs:simpleType name="pais">
+<xs:restriction base="xs:string">
+<xs:enumeration value="CU"/>
+<xs:enumeration value="CHL"/>
+<xs:enumeration value="COL"/>
+<xs:enumeration value="ESP"/>
+</xs:restriction>
+</xs:simpleType>
+</xs:schema>

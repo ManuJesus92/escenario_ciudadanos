@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="ciudadano-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="ciudadano-api-config" api="resource::de794012-fdcd-40c5-9411-05226903874d:ciudadano-api:1.0.2:raml:zip:ciudadano-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="1a052d32-c839-4ee2-abde-b276a59b5e3d" >
+		<wsc:connection wsdlLocation="http://3.249.81.123:8080/ws/ciudadanos.wsdl" service="CiudadanosPortService" port="CiudadanosPortSoap11" address="http://3.249.81.123:8080/ws/ciudadanos" >
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<wsc:config name="Web_Service_Consumer_Config1" doc:name="Web Service Consumer Config" doc:id="399e8f28-dbfc-40e5-ac08-dccd67b6e52c" >
+		<wsc:connection wsdlLocation="http://3.249.81.123:8080/ws/direcciones.wsdl" service="DireccionesPortService" port="DireccionesPortSoap11" address="http://3.249.81.123:8080/ws/direcciones" />
+	</wsc:config>
+	<flow name="ciudadano-api-main">
+        <http:listener config-ref="ciudadano-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="ciudadano-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="ciudadano-api-console">
+        <http:listener config-ref="ciudadano-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="ciudadano-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\ciudadano:ciudadano-api-config" doc:id="d9d9f68d-b490-40a4-9865-1167066a0615">
+        <logger level="INFO" message="get:\ciudadano:ciudadano-api-config" />
+		<wsc:consume operation="getCiudadano" doc:name="Consumir Servicio Ciudadano" doc:id="2da33e3b-6a05-4de2-a7a6-ff757d135d35" config-ref="Web_Service_Consumer_Config"/>
+		<json:validate-schema doc:name="Validar Ciudadano" doc:id="21c37287-6e71-4416-9703-42aba8d127ef" schema="ciudadano.xsd"/>
+		<choice doc:name="Choice" doc:id="26699ccf-6610-4fb0-81aa-d63c3b7421d9" >
+			<when expression="#[%dw 2.0&#10;ns ns0 http://cvaintegra.com/ciudadano&#10;---&#10;payload.body.ns0#getCiudadanoResponse.ns0#ciudadano.ns0#direccion]">
+				<set-variable value="#[%dw 2.0&#10;ns ns0 http://cvaintegra.com/ciudadano&#10;---&#10;message.payload.body.ns0#getCiudadanoResponse.ns0#ciudadano]" doc:name="Set Ciudadano" doc:id="ef99f85f-f544-4e87-bb38-29b4f44a2659" variableName="ciudadano"/>
+				<wsc:consume operation="getDireccion" doc:name="Consumir Servicio Direccion" doc:id="600ad72d-592d-42ea-bfe9-2511f12ea806" config-ref="Web_Service_Consumer_Config1"/>
+				<ee:transform doc:name="Transform Message" doc:id="c024a978-0a08-4b9c-93ca-c9a9c3b3370e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://cvaintegra.com/ciudadano
+ns ns01 http://cvaintegra.com/direccion
+---
+{
+	ciudadanos: {
+		ciudadano: [{
+			mun: vars.ciudadano.ns0#municipio,
+			direccion: {
+				calle: payload.body.ns01#getDireccionResponse.ns01#direccion.ns01#calle default "",
+				apto: payload.body.ns01#getDireccionResponse.ns01#direccion.ns01#apto default "",
+				num: payload.body.ns01#getDireccionResponse.ns01#direccion.ns01#numero default "",
+				entrecalles: (payload.body.ns01#getDireccionResponse.ns01#direccion.ns01#entreCalle1 default "") ++ (payload.body.ns01#getDireccionResponse.ns01#direccion.ns01#entreCalle2 default "")
+			},
+			"2doapellido": vars.ciudadano.ns0#apellidos,
+			"1ernombre": vars.ciudadano.ns0#nombre,
+			"2donombre": vars.ciudadano.ns0#nombre,
+			prov: vars.ciudadano.ns0#provincia,
+			"1erapellido": vars.ciudadano.ns0#apellidos,
+			pais: vars.ciudadano.ns0#pais
+		}]
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json:validate-schema doc:name="Validar Direccion" doc:id="1c32d3bf-df52-4b07-983b-c5ceec0992d4" schema="direccion.xsd"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="f0f56727-3985-4c08-b44b-89ed9777ddf1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="b4d06dec-9212-4040-ad75-101fb304c9ad" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1b7973b7-862e-48f9-a5d8-eb1cae7ca39d" type="JSON:SCHEMA_NOT_HONOURED">
+				<logger level="INFO" doc:name="Logger" doc:id="8a6baf0b-0264-441b-bfce-367c82ea72f4"/>
+			</on-error-continue>
+		</error-handler>
+    </flow>
+</mule>
