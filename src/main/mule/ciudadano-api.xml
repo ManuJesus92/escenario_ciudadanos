@@ -137,7 +137,7 @@ output application/json
     <flow name="get:\ciudadano:ciudadano-api-config" doc:id="d9d9f68d-b490-40a4-9865-1167066a0615">
         <logger level="INFO" message="get:\ciudadano:ciudadano-api-config" />
 		<wsc:consume operation="getCiudadano" doc:name="Consumir Servicio Ciudadano" doc:id="2da33e3b-6a05-4de2-a7a6-ff757d135d35" config-ref="Web_Service_Consumer_Config"/>
-		<json:validate-schema doc:name="Validar Ciudadano" doc:id="21c37287-6e71-4416-9703-42aba8d127ef" schema="ciudadano.xsd"/>
+		<json:validate-schema doc:name="Validar Ciudadanos" doc:id="21c37287-6e71-4416-9703-42aba8d127ef" schema="ciudadano.xsd"/>
 		<choice doc:name="Choice" doc:id="26699ccf-6610-4fb0-81aa-d63c3b7421d9" >
 			<when expression="#[%dw 2.0&#10;ns ns0 http://cvaintegra.com/ciudadano&#10;---&#10;payload.body.ns0#getCiudadanoResponse.ns0#ciudadano.ns0#direccion]">
 				<set-variable value="#[%dw 2.0&#10;ns ns0 http://cvaintegra.com/ciudadano&#10;---&#10;message.payload.body.ns0#getCiudadanoResponse.ns0#ciudadano]" doc:name="Set Ciudadano" doc:id="ef99f85f-f544-4e87-bb38-29b4f44a2659" variableName="ciudadano"/>
